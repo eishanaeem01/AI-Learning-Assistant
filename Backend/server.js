@@ -24,11 +24,15 @@ const app = express();
 // Connect to MongoDB
 connectDB();
 
-// Middleware to handle CORS
+// Middleware to handle CORS (only allow the configured frontend URL(s))
+const allowedOrigins = (process.env.CLIENT_URL || "http://localhost:5173")
+  .split(",")
+  .map((o) => o.trim());
+
 app.use(
   cors({
-    origin: "*",
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    origin: allowedOrigins,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   })
@@ -39,6 +43,9 @@ app.use(express.urlencoded({ extended: true }));
 
 // Static folder for uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Health check (used by Render)
+app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
 // Routes
 app.use('/api/auth', authRoutes);
