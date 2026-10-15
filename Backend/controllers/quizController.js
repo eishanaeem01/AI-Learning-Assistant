@@ -1,5 +1,13 @@
 import Quiz from '../models/Quiz.js';
 
+// Gemini kabhi kabhi answers ke aage "O2: " jaisa prefix laga deta hai.
+// Compare karne se pehle usay hata kar text ko normalize karte hain.
+const clean = (s) =>
+  String(s ?? '')
+    .replace(/^O\d+\s*[:.)-]\s*/i, '')
+    .trim()
+    .toLowerCase();
+
 // @desc    Get all quizzes for a document
 // @route   GET /api/quizzes/:documentId
 // @access  Private
@@ -94,7 +102,9 @@ export const submitQuiz = async (req, res, next) => {
 
       if (questionIndex < quiz.questions.length) {
         const question = quiz.questions[questionIndex];
-        const isCorrect = selectedAnswer === question.correctAnswer;
+
+        // FIX: prefix hata kar compare karo ("O2: 1 October 2026" vs "1 October 2026")
+        const isCorrect = clean(selectedAnswer) === clean(question.correctAnswer);
 
         if (isCorrect) correctCount++;
 
